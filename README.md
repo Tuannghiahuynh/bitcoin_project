@@ -239,6 +239,10 @@ Check file statistics:
 - Processed files count and size
 - Database record count
 
+## License
+
+MIT License
+
 ## Author
 
 Tuan Nghia Huynh
