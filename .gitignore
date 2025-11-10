@@ -31,6 +31,17 @@ env/
 .env.local
 .env.*.local
 
+# Docker
+docker-compose.override.yml
+
+# Airflow
+logs/
+airflow-*.pid
+airflow.cfg
+airflow.db
+webserver_config.py
+standalone_admin_password.txt
+
 # IDE
 .vscode/
 .idea/

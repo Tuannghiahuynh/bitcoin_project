@@ -38,19 +38,41 @@ This ETL pipeline fetches Bitcoin (BTC/USDT) price data every 30 minutes, proces
 bitcoin_project/
 ├── src/
 │   ├── main.py                  # ETL pipeline entry point
-│   ├── extract/                 # Data extraction from Binance API
-│   ├── transform/               # Data transformation and validation
-│   ├── load/                    # Load to PostgreSQL with CDC
-│   └── utils/                   # Configuration, logging, file storage
+│   ├── extract/
+│   │   ├── __init__.py
+│   │   └── bitcoin_api.py       # Binance API data extraction
+│   ├── transform/
+│   │   ├── __init__.py
+│   │   └── transform_data.py    # Data cleaning and transformation
+│   ├── load/
+│   │   ├── __init__.py
+│   │   └── load_to_db.py        # PostgreSQL loader with CDC
+│   └── utils/
+│       ├── __init__.py
+│       ├── config.py            # Configuration manager
+│       ├── db_connection.py     # Database connection handler
+│       ├── file_storage.py      # File storage and retention manager
+│       └── logger.py            # Logging configuration
+├── dags/
+│   └── bitcoin_etl_dag.py       # Airflow DAG definition
 ├── config/
-│   └── config.yaml              # Application configuration
+│   ├── config.yaml              # Application settings
+│   └── logging.yaml             # Logging config (not used)
 ├── data/
-│   ├── raw/                     # Raw JSON files (7 days)
-│   ├── processed/               # Parquet files (30 days)
+│   ├── raw/                     # Raw JSON files (7-day retention)
+│   ├── processed/               # Parquet files (30-day retention)
 │   └── logs/                    # Application logs
-├── .env                         # Database credentials
-├── requirements.txt
-└── README.md
+├── plugins/                     # Airflow plugins (if needed)
+├── tests/                       # Unit tests
+├── Dockerfile                   # Custom Airflow image
+├── docker-compose.yml           # Docker orchestration
+├── init-db.sql                  # Database initialization
+├── .env                         # Local database credentials
+├── .env.docker                  # Docker environment variables
+├── .gitignore                   # Git ignore rules
+├── requirements.txt             # Python dependencies
+├── README.md                    # This file
+└── DOCKER_README.md             # Docker setup guide
 ```
 
 ## Installation
