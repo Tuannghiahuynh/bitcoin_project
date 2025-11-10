@@ -1,104 +1,70 @@
 # Bitcoin ETL Project
 
-A comprehensive data pipeline project to extract Bitcoin price data from Binance API, transform it, and load it into PostgreSQL database with automatic data archival and retention management.
+Personal data engineering project to extract Bitcoin price data from Binance API, transform it, and load it into PostgreSQL database with automated data management and visualization.
+
+## Overview
+
+This ETL pipeline fetches Bitcoin (BTC/USDT) price data every 30 minutes, processes it, stores it in PostgreSQL, and enables analysis through Power BI dashboards. The entire workflow can be orchestrated using Apache Airflow for automated scheduling.
+
+## Features
+
+### ETL Pipeline
+- **Extract**: Fetch Bitcoin price data from Binance API (30-minute intervals)
+- **Transform**: Clean, validate, and enrich data with pandas
+- **Load**: Insert into PostgreSQL with Change Data Capture (CDC)
+
+### Data Management
+- **Raw Data**: JSON files with metadata (7-day retention)
+- **Processed Data**: Parquet files for efficient storage (30-day retention)
+- **Auto Cleanup**: Automatic removal of old files
+- **Database**: PostgreSQL with indexed tables for fast queries
+
+### Logging & Monitoring
+- **Smart Logging**: Console (detailed) + File (important events only)
+- **Daily Rotation**: Automatic log file rotation
+- **Statistics**: Track records fetched, processed, and inserted
+
+### Visualization
+- **Power BI**: Connect to PostgreSQL for interactive dashboards
+- **Analytics**: Price trends, volatility, time-based patterns
+
+### Orchestration
+- **Apache Airflow**: Schedule and monitor ETL jobs
+- **DAG Support**: Ready for workflow automation
 
 ## Project Structure
 
 ```
-bitcoin_etl_project/
-│
-├── README.md
-├── requirements.txt
-├── .env                      # Database credentials (not tracked in git)
-├── .gitignore
-│
-├── config/
-│   ├── config.yaml          # Application configuration (API, ETL settings)
-│   └── logging.yaml         # Logging configuration (not used - configured in code)
-│
+bitcoin_project/
 ├── src/
-│   ├── __init__.py
-│   ├── main.py              # Main ETL pipeline entry point
-│   │
-│   ├── extract/
-│   │   ├── __init__.py
-│   │   └── bitcoin_api.py   # Extract data from Binance API
-│   │
-│   ├── transform/
-│   │   ├── __init__.py
-│   │   └── transform_data.py # Transform and validate data
-│   │
-│   ├── load/
-│   │   ├── __init__.py
-│   │   └── load_to_db.py    # Load data to PostgreSQL with CDC
-│   │
-│   ├── utils/
-│   │   ├── __init__.py
-│   │   ├── config.py        # Configuration manager
-│   │   ├── db_connection.py # Database connection manager
-│   │   ├── file_storage.py  # File storage and retention manager
-│   │   └── logger.py        # Logging configuration
-│
-├── tests/
-│
-└── data/
-    ├── raw/                 # Raw JSON files (7-day retention)
-    ├── processed/           # Processed Parquet files (30-day retention)
-    └── logs/                # Application logs (30-day rotation)
+│   ├── main.py                  # ETL pipeline entry point
+│   ├── extract/                 # Data extraction from Binance API
+│   ├── transform/               # Data transformation and validation
+│   ├── load/                    # Load to PostgreSQL with CDC
+│   └── utils/                   # Configuration, logging, file storage
+├── config/
+│   └── config.yaml              # Application configuration
+├── data/
+│   ├── raw/                     # Raw JSON files (7 days)
+│   ├── processed/               # Parquet files (30 days)
+│   └── logs/                    # Application logs
+├── .env                         # Database credentials
+├── requirements.txt
+└── README.md
 ```
-
-## Features
-
-### Core ETL Pipeline
-- **Extract**: Fetch Bitcoin (BTC/USDT) price data from Binance API
-  - Configurable time intervals (default: 30 minutes)
-  - Configurable data range (default: 120 days, max ~20 days per fetch)
-  
-- **Transform**: Clean and enrich data using pandas
-  - Remove duplicates and invalid records
-  - Add date and hour features
-  - Calculate price statistics
-  
-- **Load**: Insert data into PostgreSQL database
-  - Change Data Capture (CDC) - only insert new records
-  - Conflict handling with upsert
-  - Indexed for query performance
-
-### Data Management
-- **Raw Data Storage**: Save API responses as formatted JSON files
-  - Metadata (source, symbol, fetch time)
-  - Human-readable timestamps
-  - OHLCV data (Open, High, Low, Close, Volume)
-  - Auto-delete files older than 7 days
-  
-- **Processed Data Storage**: Save transformed data as Parquet files
-  - Efficient columnar storage format
-  - Daily aggregation with append logic
-  - Auto-delete files older than 30 days
-
-### Logging
-- **Dual Output**: Console (detailed) + File (important only)
-- **Smart Filtering**: File logs only capture critical events
-- **Daily Rotation**: New log file each day, kept for 30 days
-
-### Configuration
-- **Centralized Config**: Single source of truth in `config.yaml`
-- **Environment Variables**: Secure credential storage in `.env`
-- **Easy Customization**: Change settings without modifying code
 
 ## Installation
 
-1. **Clone the repository**:
+1. **Clone repository**:
 ```bash
-git clone <repository-url>
+git clone https://github.com/Tuannghiahuynh/bitcoin_project.git
 cd bitcoin_project
 ```
 
 2. **Create virtual environment**:
 ```bash
 python -m venv .venv
-.venv\Scripts\activate  # Windows
-# source .venv/bin/activate  # Linux/Mac
+.venv\Scripts\activate
 ```
 
 3. **Install dependencies**:
@@ -106,9 +72,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-4. **Configure environment variables**:
-   
-   Create `.env` file in project root:
+4. **Configure `.env`**:
 ```env
 DB_HOST=localhost
 DB_PORT=5432
@@ -117,26 +81,9 @@ DB_USER=postgres
 DB_PASSWORD=your_password
 ```
 
-5. **Configure application settings** (optional):
-   
-   Edit `config/config.yaml` to customize:
-   - API settings (symbol, interval, limit)
-   - ETL parameters (fetch days, batch size)
-
-## Database Setup
-
-The pipeline requires a PostgreSQL database. The table will be created automatically on first run.
-
-**Table Schema**:
+5. **Create database**:
 ```sql
-CREATE TABLE bitcoin_prices (
-    id SERIAL PRIMARY KEY,
-    timestamp TIMESTAMP UNIQUE NOT NULL,
-    price NUMERIC(15, 2) NOT NULL,
-    date DATE,
-    hour INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+CREATE DATABASE bitcoin_db;
 ```
 
 ## Usage
@@ -149,43 +96,31 @@ python src/main.py
 
 The pipeline will:
 1. Clean up old files (>7 days raw, >30 days processed)
-2. Extract Bitcoin price data from Binance API
-3. Save raw data as JSON in `data/raw/`
-4. Transform and validate data
-5. Save processed data as Parquet in `data/processed/`
-6. Load new records into PostgreSQL database
-7. Display summary statistics
+2. Fetch Bitcoin prices from Binance API
+3. Save raw data as formatted JSON
+4. Transform and save as Parquet
+5. Load new records to PostgreSQL (CDC)
+6. Display summary statistics
 
-### Scheduling (Optional)
+## Database Schema
 
-Run the pipeline periodically using Windows Task Scheduler or cron:
-
-**Windows Task Scheduler**:
-- Action: `D:\bitcoin_project\.venv\Scripts\python.exe`
-- Arguments: `D:\bitcoin_project\src\main.py`
-- Start in: `D:\bitcoin_project`
-
-**Linux/Mac cron** (every 30 minutes):
-```bash
-*/30 * * * * cd /path/to/bitcoin_project && .venv/bin/python src/main.py
+```sql
+CREATE TABLE bitcoin_prices (
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP UNIQUE NOT NULL,
+    price NUMERIC(15, 2) NOT NULL,
+    date DATE,
+    hour INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
-## Configuration Files
+## Configuration
 
-### `.env` - Database Credentials
-```env
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=bitcoin_db
-DB_USER=postgres
-DB_PASSWORD=postgres
-```
-
-### `config/config.yaml` - Application Settings
+### Application Settings (`config/config.yaml`)
 ```yaml
 api:
   binance:
-    base_url: https://api.binance.com/api/v3
     symbol: BTCUSDT
     interval: 30m
     limit: 1000
@@ -195,80 +130,115 @@ etl:
   batch_size: 500
 ```
 
+## Power BI Visualization
+
+### Connect to PostgreSQL
+1. Open Power BI Desktop
+2. Get Data → PostgreSQL database
+3. Server: `localhost:5432`
+4. Database: `bitcoin_db`
+5. Table: `bitcoin_prices`
+
+### Suggested Visualizations
+- **Line Chart**: Price over time
+- **Area Chart**: Price volatility by hour
+- **Card**: Current price, 24h change, min/max
+- **Table**: Recent transactions
+- **Slicers**: Filter by date range
+
+### Key Metrics
+- Current BTC price
+- 24-hour price change (%)
+- 7-day moving average
+- Daily high/low
+- Hourly price distribution
+
+## Apache Airflow Orchestration
+
+### Setup Airflow DAG
+
+Create `dags/bitcoin_etl_dag.py`:
+
+```python
+from airflow import DAG
+from airflow.operators.bash import BashOperator
+from datetime import datetime, timedelta
+
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2025, 11, 1),
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
+dag = DAG(
+    'bitcoin_etl_pipeline',
+    default_args=default_args,
+    description='Bitcoin ETL Pipeline',
+    schedule_interval='*/30 * * * *',  # Every 30 minutes
+    catchup=False
+)
+
+run_etl = BashOperator(
+    task_id='run_bitcoin_etl',
+    bash_command='cd /path/to/bitcoin_project && .venv/bin/python src/main.py',
+    dag=dag
+)
+```
+
+### Schedule
+- **Recommended**: Every 30 minutes (matches data interval)
+- **Alternative**: Hourly or custom schedule
+
 ## Data Files
 
-### Raw Data (JSON)
-- Location: `data/raw/`
+### Raw JSON (`data/raw/`)
 - Format: `bitcoin_raw_YYYYMMDD_HHMMSS.json`
+- Content: API response with metadata, OHLCV data
 - Retention: 7 days
-- Structure: Metadata + OHLCV data with readable timestamps
 
-### Processed Data (Parquet)
-- Location: `data/processed/`
+### Processed Parquet (`data/processed/`)
 - Format: `bitcoin_processed_YYYYMMDD.parquet`
+- Content: Cleaned DataFrame with features
 - Retention: 30 days
-- Structure: Cleaned DataFrame with features (date, hour)
+- Daily aggregation with automatic append
 
-### Logs
-- Location: `data/logs/`
-- Format: `bitcoin_etl.log` (rotates daily)
-- Retention: 30 days
-- Content: Important events, statistics, errors
+## Tech Stack
+
+- **Python 3.8+**: Core programming language
+- **PostgreSQL 12+**: Data warehouse
+- **Pandas**: Data transformation
+- **Binance API**: Data source (free, no API key required)
+- **Parquet**: Efficient columnar storage
+- **Power BI**: Data visualization and dashboards
+- **Apache Airflow**: Workflow orchestration (optional)
 
 ## Requirements
 
-- Python 3.8+
-- PostgreSQL 12+
-- Libraries:
-  - requests: API calls
-  - pandas: Data manipulation
-  - psycopg2-binary: PostgreSQL connection
-  - python-dotenv: Environment variables
-  - pyyaml: Configuration files
-  - pyarrow: Parquet file support
+```
+requests==2.31.0
+pandas==2.1.4
+psycopg2-binary==2.9.9
+python-dotenv==1.0.0
+pyyaml==6.0.1
+pyarrow==14.0.1
+```
 
 ## Monitoring
 
-Check logs for pipeline status:
+View logs:
 ```bash
-# View latest logs
 tail -f data/logs/bitcoin_etl.log
-
-# View today's log
-cat data/logs/bitcoin_etl.log
 ```
 
-## Troubleshooting
-
-**Connection Error**:
-- Verify PostgreSQL is running
-- Check `.env` credentials
-- Ensure database `bitcoin_db` exists
-
-**Import Error**:
-- Ensure virtual environment is activated
-- Run: `pip install -r requirements.txt`
-
-**API Rate Limit**:
-- Binance has rate limits
-- Don't run too frequently (recommended: 30 min intervals)
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-## License
-
-MIT License
+Check file statistics:
+- Raw files count and size
+- Processed files count and size
+- Database record count
 
 ## Author
 
-Your Name
-
-## Acknowledgments
-
-- Binance API for cryptocurrency data
-- PostgreSQL for robust data storage
+Tuan Nghia Huynh
