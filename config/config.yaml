@@ -1,0 +1,13 @@
+# Application Configuration
+# Database credentials are stored in .env file
+
+api:
+  binance:
+    base_url: https://api.binance.com/api/v3
+    symbol: BTCUSDT
+    interval: 30m
+    limit: 1000
+
+etl:
+  fetch_days: 120
+  batch_size: 500
