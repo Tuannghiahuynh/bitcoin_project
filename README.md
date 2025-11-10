@@ -237,38 +237,3 @@ tail -f data/logs/bitcoin_etl.log
 # View today's log
 cat data/logs/bitcoin_etl.log
 ```
-
-## Troubleshooting
-
-**Connection Error**:
-- Verify PostgreSQL is running
-- Check `.env` credentials
-- Ensure database `bitcoin_db` exists
-
-**Import Error**:
-- Ensure virtual environment is activated
-- Run: `pip install -r requirements.txt`
-
-**API Rate Limit**:
-- Binance has rate limits
-- Don't run too frequently (recommended: 30 min intervals)
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-## License
-
-MIT License
-
-## Author
-
-Your Name
-
-## Acknowledgments
-
-- Binance API for cryptocurrency data
-- PostgreSQL for robust data storage
